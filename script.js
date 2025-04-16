@@ -42,12 +42,15 @@ generateBtn.addEventListener("click", async () => {
   ${jobDesc}
   `;
   
+  const OPENAI_API_KEY = ""; // Leave this blank, it will be filled from a secure source
+
+
     try {
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer ***REMOVED***uVGoutiQjmN28tI0JZyYS86Ip3wVY943nTpkfkkQMtOYsYicABbssc_eGqLnvhPDzFxGYuSnCfT3BlbkFJ2tJXhGW6YBK9etG3AdfvwYm85WkJqAj6XdzJK9Cc7tiVleerWnBpN4a-ZiumEs12e-4uZSBdkA"
+          "Authorization": `Bearer ${OPENAI_API_KEY}`
         },
         body: JSON.stringify({
           model: "gpt-3.5-turbo",
