@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ApplyNowAI</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+        <img src="applynowai-logo.png" alt="ApplyNowAI Logo" class="logo">
+        <h1>ApplyNowAI</h1>
+  </header>
+
+  <h2>Output Options</h2>
+
+<label for="outputType">Output Type:</label>
+<select id="outputType">
+  <option value="cover letter">Cover Letter</option>
+  <option value="resume rewrite">Resume Rewrite</option>
+</select><br><br>
+
+<label for="tone">Tone:</label>
+<select id="tone">
+  <option value="professional">Professional</option>
+  <option value="friendly">Friendly</option>
+  <option value="assertive">Assertive</option>
+  <option value="enthusiastic">Enthusiastic</option>
+  <option value="angry">Angry</option>
+  <option value="caveman">Caveman</option>
+  <!--<option value="underwater">Underwater</option>-->
+</select><br><br>
+
+<label for="jobTitle">Target Job Title:</label>
+<input type="text" id="jobTitle" placeholder="e.g. Solutions Engineer"><br><br>
+
+<button id="recordBtn">🎤 Record Resume Summary</button>
+<small id="recordStatus"></small><br><br>
+
+  <label for="resume">Paste Your Resume:</label><br>
+  <textarea id="resume" rows="10" cols="80"></textarea><br><br>
+
+  <label for="jobDesc">Paste Job Description:</label><br>
+  <textarea id="jobDesc" rows="10" cols="80"></textarea><br><br>
+
+  <button id="generateBtn">Generate Cover Letter</button>
+
+  <div id="loading" style="display:none; font-style: italic;">Generating, please wait...</div>
+
+  <h2 id="generatedTitle">Generated Cover Letter:</h2>
+  <button id="downloadBtn" style="display:none;">Download Result</button>
+
+  <pre id="output"></pre>
+
+  <script src="script.js"></script>
+</body>
+</html>
