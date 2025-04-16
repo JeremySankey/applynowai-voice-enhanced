@@ -42,25 +42,18 @@ generateBtn.addEventListener("click", async () => {
   ${jobDesc}
   `;
   
-  const OPENAI_API_KEY = ""; // Leave this blank, it will be filled from a secure source
-
-
-    try {
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "gpt-3.5-turbo",
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.7
-        })
-      });
+  try {
+    const response = await fetch("http://localhost:5000/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ prompt })
+    });
   
-      const data = await response.json();
-      output.textContent = data.choices[0].message.content;
+    const data = await response.json();
+    output.textContent = data.result;
+
       downloadBtn.style.display = "inline-block"; // show download button
     } catch (err) {
       output.textContent = "Error: " + err.message;
@@ -86,7 +79,29 @@ recordBtn.addEventListener("click", async () => {
   // Step 1: Ask permission to use the microphone
   if (!mediaRecorder || mediaRecorder.state === "inactive") {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream);
+    console.log("🎙️ Supported MIME types:");
+[
+  'audio/webm',
+  'audio/webm;codecs=opus',
+  'audio/webm;codecs=vorbis',
+  'audio/ogg',
+  'audio/wav',
+  'audio/mpeg'
+].forEach(type => {
+  if (MediaRecorder.isTypeSupported(type)) {
+    console.log(`✅ ${type}`);
+  } else {
+    console.log(`❌ ${type}`);
+  }
+});
+
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+
+    if (!MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+  alert("Your browser does not support 'audio/webm;codecs=opus'. Try using Chrome.");
+  return;
+}
+
     audioChunks = [];
 
     mediaRecorder.start();
@@ -94,42 +109,49 @@ recordBtn.addEventListener("click", async () => {
 
     mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
 
+    mediaRecorder.ondataavailable = e => {
+        console.log("🎧 Received data chunk:", e.data);
+        audioChunks.push(e.data);
+      };
+      
+
     // Step 2: Once recording is stopped
     mediaRecorder.onstop = async () => {
       recordStatus.textContent = "Transcribing with Deepgram...";
 
       const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      console.log("📦 Recorded Blob MIME type:", audioBlob.type);
+
       const audioBuffer = await audioBlob.arrayBuffer();
+      console.log("📏 Audio buffer length:", audioBuffer.byteLength);
+      console.log("🧬 First 8 bytes:", new Uint8Array(audioBuffer.slice(0, 8)));
 
 
       try {
-        const response = await fetch("https://api.deepgram.com/v1/listen", {
-          method: "POST",
-          headers: {
-            "Authorization": "Token 71ff69a05aff609ad62b5a0c358d8168c7ec9640",
-            "Content-Type": "audio/webm",
-            "dg-encoding": "opus",
-            "dg-language": "en-US"
-          },
+        const response = await fetch("http://localhost:5000/transcribe", {
+            method: "POST",
+            headers: {
+              "Content-Type": "audio/webm"
+            },
+            body: audioBuffer
+          });
+          
 
-          body: audioBuffer
-        });
+          const data = await response.json();
+          const transcript = data.results?.channels?.[0]?.alternatives?.[0]?.transcript;
+          console.log("🧾 Full Deepgram response:", data);
+          console.log("📝 Extracted transcript:", transcript);
 
-        const data = await response.json();
-        
-        if (data.results && data.results.channels) {
-            const transcript = data.results.channels[0].alternatives[0].transcript;
+          
+          if (typeof transcript === 'string' && transcript.length > 0) {
+
             document.getElementById("resume").value = transcript;
             recordStatus.textContent = "Transcript added to Resume field!";
           } else {
             console.error("Deepgram Error:", data);
             recordStatus.textContent = "Deepgram returned an error. Check the format or API key.";
           }
-         
-
-        // Step 3: Put the transcript into the Resume box
-        document.getElementById("resume").value = transcript;
-        recordStatus.textContent = "Transcript added to Resume field!";
+          
       } catch (err) {
         recordStatus.textContent = "Error during transcription.";
         console.error(err);
@@ -137,9 +159,10 @@ recordBtn.addEventListener("click", async () => {
     };
   }
 
-  // Step 4: If it’s already recording and you click again, stop recording
   if (mediaRecorder.state === "recording") {
-    mediaRecorder.stop();
+    setTimeout(() => {
+      mediaRecorder.stop();
+    }, 45000); // wait 45 seconds to ensure data is available
   }
 });
 
